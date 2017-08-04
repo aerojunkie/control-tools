@@ -1,8 +1,3 @@
-
-var sampleperiod = 1;
-var bandwidth = 1; 
-var delaylength = 1;
-
 var i = 0;
 var mousemovex = [];
 var mousemovey = [];
@@ -11,35 +6,57 @@ var canvasx = 1300;
 var canvasy = 800;
 
 function setup() {
-   createCanvas(canvasx, canvasy);
+   var c = createCanvas(canvasx, canvasy);
+  textSize(15);
+  noStroke();
+   c.position(100, 50);
    whiteball = new Ball();
    redball = new grabmouse();
+   bandSlider = createSlider(1, 100, 1);
+   bandSlider.position(100, 900);
+
+   sampSlider = createSlider(1, 50, 1);
+   sampSlider.position(300, 900);
+
+   delaySlider = createSlider(1, 50, 1);
+   delaySlider.position(500, 900);
 }
 
 function draw() {
    background(51);
+   var bandwidth = bandSlider.value();
+   var sampleperiod = sampSlider.value();
+   var delaylength = delaySlider.value();
 
-   mousepos = redball.update();
+   mousepos = redball.update(delaylength);
 
    i++
    if (i >= sampleperiod) {
       i = 0;
-      whiteball.update(mousepos);
+      whiteball.update(mousepos, bandwidth);
       whiteball.run();
       whiteball.show();
    } else if (i < sampleperiod) {
-      whiteball.update(mousepos);
+      whiteball.update(mousepos, bandwidth);
       whiteball.show();
    }
-   
-   redball.show();
+     redball.show();
+
+   text = createDiv('Target Bandwidth');
+   text.position(100, 880);
+
+   text = createDiv('Target Sample Time');
+   text.position(300, 880);
+
+   text = createDiv('Mouse Delay');
+   text.position(500, 880);
 
 }
 
 function grabmouse() {
    this.diameter = 10;
 
-   this.update = function() {
+   this.update = function(delaylength) {
       this.x = mouseX;
       this.y = mouseY;
       mousemovex.push(this.x);
@@ -70,15 +87,15 @@ function Ball() {
    this.shrink = 3;
    this.angle = 0;
    this.speed = 0;
-   this.maxspeed = bandwidth / 2;
-   this.maxangvel = bandwidth / 150;
    this.angvel = 0;
    this.linvel = 0;
-   this.angaccel = bandwidth / 250;
-   this.linaccel = bandwidth / 10;
 
-   this.update = function(mousepos) {
-      console.log(mousepos);
+   this.update = function(mousepos, bandwidth) {
+      this.maxspeed = bandwidth / 2;
+      this.maxangvel = bandwidth / 150;
+      this.angaccel = bandwidth / 250;
+      this.linaccel = bandwidth / 10;
+
       this.angvel = this.angvel + random(-this.angaccel, this.angaccel);
       this.linvel = this.linvel + random(-this.linaccel, this.linaccel);
 
@@ -99,10 +116,19 @@ function Ball() {
 
       this.errordiam = Math.sqrt(this.total) * 2;
 
-      if (this.errordiam > this.scorediam) {
+      if (mousepos[0] < width && mousepos[0] > 0) {this.mousein = 1;}
+      else{this.mousein = 0;}
+
+      if (mousepos[1] < height && mousepos[1] > 0) {this.mousein = this.mousein;}
+      else{this.mousein = 0;}
+
+
+      if (this.errordiam > this.scorediam && this.mousein) {
          this.scorediam = this.errordiam;
       } else {
          this.scorediam = this.scorediam - this.shrink;
+         this.scorediam = constrain(this.scorediam, 1, 3000);
+
       }
 
       if (this.x > canvasx - this.diameter/2) { 
