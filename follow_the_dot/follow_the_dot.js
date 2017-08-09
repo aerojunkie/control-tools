@@ -7,6 +7,7 @@ var canvasy = 800;
 
 function setup() {
    var c = createCanvas(canvasx, canvasy);
+   frameRate(15);
   textSize(15);
   noStroke();
    c.position(100, 50);
@@ -18,7 +19,7 @@ function setup() {
    sampSlider = createSlider(1, 50, 1);
    sampSlider.position(300, 900);
 
-   delaySlider = createSlider(1, 50, 1);
+   delaySlider = createSlider(1, 30, 1);
    delaySlider.position(500, 900);
 }
 
@@ -42,14 +43,14 @@ function draw() {
    }
      redball.show();
 
-   text = createDiv('Target Bandwidth');
-   text.position(100, 880);
+   words = createDiv('Target Bandwidth');
+   words.position(100, 880);
 
-   text = createDiv('Target Sample Time');
-   text.position(300, 880);
+   words = createDiv('Target Sample Time');
+   words.position(300, 880);
 
-   text = createDiv('Mouse Delay');
-   text.position(500, 880);
+   words = createDiv('Mouse Delay');
+   words.position(500, 880);
 
 }
 
@@ -63,11 +64,11 @@ function grabmouse() {
       mousemovey.push(this.y);
 
       if (mousemovex.length > delaylength) {
-         mousemovex.splice(0, 1);
+         mousemovex.splice(0, mousemovex.length - delaylength);
       }
       
       if (mousemovey.length > delaylength) {
-         mousemovey.splice(0, 1);
+         mousemovey.splice(0, mousemovey.length - delaylength);
       }
       return [mousemovex[0], mousemovey[0]];
 
@@ -84,11 +85,12 @@ function Ball() {
    this.y = canvasy / 2;
    this.diameter = 40;
    this.scorediam = 200;
-   this.shrink = 3;
+   this.shrink = 5;
    this.angle = 0;
    this.speed = 0;
    this.angvel = 0;
    this.linvel = 0;
+   this.minscore = 1500;
 
    this.update = function(mousepos, bandwidth) {
       this.maxspeed = bandwidth / 2;
@@ -110,8 +112,8 @@ function Ball() {
       this.x = this.x + this.xspeed;
       this.y = this.y + this.yspeed;
 
-      this.mx = Math.pow((mousepos[0] - this.x), 2);
-      this.my = Math.pow((mousepos[1] - this.y), 2);
+      this.mx = (mousepos[0] - this.x) * (mousepos[0] - this.x);
+      this.my = (mousepos[1] - this.y) * (mousepos[1] - this.y);
       this.total = this.mx + this.my;
 
       this.errordiam = Math.sqrt(this.total) * 2;
@@ -130,6 +132,8 @@ function Ball() {
          this.scorediam = constrain(this.scorediam, 1, 3000);
 
       }
+
+      if (this.mousein == 0) {this.scorediam = 1500;}
 
       if (this.x > canvasx - this.diameter/2) { 
 	this.xspeed = -Math.abs(this.xspeed); 
@@ -169,5 +173,10 @@ function Ball() {
       ellipse(this.runx, this.runy, this.scorediam, this.scorediam);
       fill(255);
       ellipse(this.runx, this.runy, this.diameter, this.diameter);
+      textSize(20);
+      text("Current score: " + floor(this.scorediam), 10, 40);
+      this.minscore = Math.min(this.minscore, this.scorediam);
+      text("Minimum score: " + floor(this.minscore), 10, 70);
+
    }
 }
